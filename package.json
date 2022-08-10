@@ -1,0 +1,25 @@
+{
+  "name": "longyutaobot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agoudbg/longyutaobot.git"
+  },
+  "author": "agoudbg",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/agoudbg/longyutaobot/issues"
+  },
+  "homepage": "https://github.com/agoudbg/longyutaobot#readme",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "mysql2": "^2.3.3",
+    "node-telegram-bot-api": "^0.58.0",
+    "xss": "^1.0.13"
+  }
+}
