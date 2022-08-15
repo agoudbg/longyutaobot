@@ -9,6 +9,8 @@ const bot = new TelegramBot(config.token, { polling: true });
 
 const sql = mysql.createPool(config.mysql);
 
+var adminUploadBind = {};
+
 bot.on("polling_error", console.log);
 
 bot.on('message', async (msg) => {
@@ -83,6 +85,51 @@ bot.on('message', async (msg) => {
                 else if (command[0] == 'edit') {
                     await sql.query("UPDATE `stickers` SET `keyword` = ? WHERE `unique_id` = ?", [command.slice(1).join(' '), msg.reply_to_message.sticker.file_unique_id]);
                     bot.sendMessage(msg.chat.id, "修改成功。", { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                }
+            }
+            break;
+        default:
+            if (config.admin.indexOf(msg.chat.id) > -1) {
+                switch (command[0]) {
+                    case 'create':
+                        if (command.length < 3) {
+                            return bot.sendMessage(msg.chat.id, "请输入贴纸包名称和 ID。", { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                        }
+                        if (!msg.reply_to_message || !msg.reply_to_message.sticker) {
+                            return bot.sendMessage(msg.chat.id, "请回复一张贴纸。", { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                        }
+                        sticker = msg.reply_to_message.sticker;
+                        newSet = await bot.createNewStickerSet(msg.from.id, command[2] + "_by_" + config.username, command[1].replace(/\&nbsp;/g, ' '), sticker.file_id, sticker.emoji || '🐉');
+                        await sql.query("INSERT INTO `stickers` (`id`, `keyword`, `unique_id`) VALUES (?, ?, ?) IF NOT EXISTS", [sticker.file_id, '', sticker.file_unique_id]);
+                        bot.sendMessage(msg.chat.id, "创建成功。", { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                    case 'set':
+                        if (command.length < 2) {
+                            return bot.sendMessage(msg.chat.id, "请输入贴纸包 ID。", { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                        }
+                        adminUploadBind[msg.from.id] = { id: command[1] };
+                        bot.sendMessage(msg.chat.id, `成功绑定 ${command[1]}，bot 重启后重置。`, { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                        break;
+                    case 'done':
+                        adminUploadBind[msg.from.id] = null;
+                        bot.sendMessage(msg.chat.id, `成功解除绑定。`, { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                        break;
+                }
+                if (msg.sticker && adminUploadBind[msg.from.id]) {
+                    uIdTry = await sql.query("SELECT * FROM `stickers` WHERE `unique_id` = ?", [msg.sticker.file_unique_id]);
+                    if (uIdTry[0].length > 0) {
+                        return bot.sendMessage(msg.chat.id, "该贴纸已存在。", { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                    }
+                    stickerAddStatus = false;
+                    stickerAddStatus = await bot.addStickerToSet(msg.from.id, adminUploadBind[msg.from.id].id + "_by_" + config.username, msg.sticker.file_id, msg.sticker.emoji || '🐉');
+                    if (stickerAddStatus) {
+                        setStks = await bot.getStickerSet(adminUploadBind[msg.from.id].id + "_by_" + config.username);
+                        if (setStks) stkInfo = setStks['stickers'][setStks['stickers'].length - 1];
+                        await sql.query("INSERT INTO `stickers` (`id`, `keyword`, `unique_id`) VALUES (?, ?, ?)", [stkInfo.file_id, '', stkInfo.file_unique_id]);
+                        bot.sendMessage(msg.chat.id, "添加成功。", { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                    }
+                    else {
+                        bot.sendMessage(msg.chat.id, "添加失败。", { reply_to_message_id: msg.message_id, allow_send_without_reply: true });
+                    }
                 }
             }
     }
