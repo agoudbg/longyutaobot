@@ -17,9 +17,9 @@
   },
   "homepage": "https://github.com/agoudbg/longyutaobot#readme",
   "dependencies": {
-    "fs": "^0.0.1-security",
-    "mysql2": "^3.9.8",
-    "node-telegram-bot-api": "^0.66.0",
-    "xss": "^1.0.13"
+    "fs": "^0.0.2",
+    "mysql2": "^3.16.0",
+    "node-telegram-bot-api": "^0.67.0",
+    "xss": "^1.0.15"
   }
 }
