@@ -19,7 +19,7 @@
   "dependencies": {
     "fs": "^0.0.2",
     "mysql2": "^3.16.0",
-    "node-telegram-bot-api": "^0.67.0",
+    "node-telegram-bot-api": "^1.1.0",
     "xss": "^1.0.15"
   }
 }
